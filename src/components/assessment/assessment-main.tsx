@@ -14,6 +14,7 @@ export function AssessmentMain() {
   const [phase, setPhase] = useState<AssessmentPhase>('intro');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [sectionStarted, setSectionStarted] = useState(false);
   
   const currentQuestion = assessmentQuestions[currentQuestionIndex];
   const currentSection = currentQuestion?.category;
@@ -40,6 +41,11 @@ export function AssessmentMain() {
   const handleNext = () => {
     if (currentQuestionIndex < assessmentQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+      // Reset section started for new sections
+      const nextQuestion = assessmentQuestions[currentQuestionIndex + 1];
+      if (nextQuestion?.category !== currentSection) {
+        setSectionStarted(false);
+      }
     } else {
       // Calculate results and move to results phase
       const results = calculateResults(answers);
@@ -148,12 +154,17 @@ export function AssessmentMain() {
       setPhase('intro');
       setCurrentQuestionIndex(0);
       setAnswers({});
+      setSectionStarted(false);
     }} />;
   }
 
-  // Check if we're starting a new section
-  const isNewSection = currentQuestionIndex === 0 || 
-    assessmentQuestions[currentQuestionIndex - 1]?.category !== currentSection;
+  // Check if we're starting a new section and haven't started it yet
+  const isNewSection = !sectionStarted && (currentQuestionIndex === 0 || 
+    assessmentQuestions[currentQuestionIndex - 1]?.category !== currentSection);
+
+  const handleBeginSection = () => {
+    setSectionStarted(true);
+  };
 
   if (isNewSection && currentSection) {
     const section = sectionInfo[currentSection as keyof typeof sectionInfo];
@@ -173,8 +184,8 @@ export function AssessmentMain() {
           <CardContent>
             <p className="text-lg leading-relaxed mb-6">{section.description}</p>
             <button
-              onClick={() => {/* Already on the right question */}}
-              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300"
+              onClick={handleBeginSection}
+              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105"
             >
               Begin Section →
             </button>
